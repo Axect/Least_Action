@@ -28,6 +28,40 @@ impl<L: Lagrangian<Q = f64>> Lattice1D<L> {
     pub fn v_mean(&self) -> f64 {
         (self.end_node - self.init_node) as f64 / self.t as f64
     }
+
+    pub fn x_mean(&self) -> f64 {
+        (self.init_node + self.end_node) as f64 / 2f64
+    }
+
+    pub fn x_min(&self) -> f64 {
+        self.init_node as f64
+    }
+
+    pub fn x_max(&self) -> f64 {
+        self.end_node as f64
+    }
+
+    pub fn v_min(&self) -> f64 {
+        1f64
+    }
+
+    pub fn v_max(&self) -> f64 {
+        (self.end_node - self.init_node) as f64
+    }
+
+    pub fn l_min(&self) -> f64 {
+        self.lagrangian.calc(&self.x_max(), &self.v_min())
+    }
+
+    pub fn l_max(&self) -> f64 {
+        self.lagrangian.calc(&self.x_min(), &self.v_max())
+    }
+
+    pub fn l_minmax(&self, q: f64, dq: f64) -> f64 {
+        let l = self.lagrangian.calc(&q, &dq);
+        //(l - self.l_min()) / (self.l_max() - self.l_min())
+        (l - self.l_min()).powi(2)
+    }
 }
 
 impl<L: Lagrangian<Q = f64>> Env<S, i64> for Lattice1D<L> {
@@ -46,22 +80,25 @@ impl<L: Lagrangian<Q = f64>> Env<S, i64> for Lattice1D<L> {
             return (None, 1.0);
         }
         let action = action.as_ref().unwrap();
-        let r = if *action == 0 { -1.0 } else { 0.0 };
         let q_curr = state.0;
         let q_next = state.0 + action;
 
         let q = (q_curr + q_next) as f64 / 2f64;
         let dq = (q_next - q_curr) as f64;
 
-        let l = self.lagrangian().calc(&q, &dq);
+        let l_minmax = self.l_minmax(q, dq);
 
         (
             Some((q_next, state.1 + 1)),
-            -(l - 0.5f64 * self.v_mean().powi(2)).tanh() + r,
+            -l_minmax
         )
     }
 
     fn available_actions(&self, state: &S) -> Vec<i64> {
-        (0..self.end_node - state.0 + 1).collect()
+        if self.is_goal(state) {
+            vec![0]
+        } else {
+            (1 .. self.end_node - state.0 + 1).collect()
+        }
     }
 }

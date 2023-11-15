@@ -1,18 +1,19 @@
 use forger::prelude::*;
-use reinla::lagrangian::one_dim::FreeBody;
+use reinla::lagrangian::one_dim::UniformGravity;
 use reinla::lattice::one_dim::Lattice1D;
 
 type S = (i64, usize);
 type A = i64;
 type P = EGreedyPolicy<A>;
-type L = FreeBody;
-type E = Lattice1D<FreeBody>;
+type L = UniformGravity;
+type E = Lattice1D<L>;
 
 const M: f64 = 1.0;
+const G: f64 = 2.0;
 
 fn main() {
-    let env = E::new(0, 5, 5, L::new(M));
-    let mut agent = QTD0::<S, A, P, E>::new(1.0, 1e-2, 0.5f64);
+    let env = E::new(0, 24, 4, L::new(M, G));
+    let mut agent = QTD0::<S, A, P, E>::new(1.0, 0.1f64, 1f64);
     let mut policy = P::new(1.0, 0.9);
 
     let mut history = Vec::new();
@@ -50,8 +51,6 @@ fn main() {
         policy.decay_epsilon();
     }
 
-    println!("{:?}", history.iter().map(|x| x.len()).collect::<Vec<usize>>());
-
     // Test
     policy.eval();
     agent.reset_count();
@@ -79,7 +78,6 @@ fn main() {
     println!("{:?}", q_max);
     println!("{:?}", env.l_min());
     println!("{:?}", env.l_max());
-
 
     println!("{:?}", episode);
 }
