@@ -12,8 +12,8 @@ const M: f64 = 1.0;
 const G: f64 = 2.0;
 
 fn main() {
-    let env = E::new(0, 24, 4, L::new(M, G));
-    let mut agent = QTD0::<S, A, P, E>::new(1.0, 0.1f64, 1f64);
+    let env = E::new(0, 20, 4, L::new(M, G));
+    let mut agent = QTD0::<S, A, P, E>::new(1.0, 1e-3, 1f64);
     let mut policy = P::new(1.0, 0.9);
 
     let mut history = Vec::new();
