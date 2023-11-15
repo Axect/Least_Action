@@ -2,7 +2,7 @@ use forger::prelude::*;
 use reinla::lagrangian::one_dim::FreeBody;
 use reinla::lattice::one_dim::Lattice1D;
 
-type S = (i64, usize);
+type S = (usize, i64);
 type A = i64;
 type P = EGreedyPolicy<A>;
 type L = FreeBody;

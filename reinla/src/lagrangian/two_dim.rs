@@ -14,10 +14,10 @@ impl FreeBody {
 }
 
 impl Lagrangian for FreeBody {
-    type Q = f64;
+    type Q = (f64, f64);
 
     fn calc(&self, _q: &Self::Q, dq: &Self::Q) -> f64 {
-        0.5 * self.mass * dq.powi(2)
+        0.5 * self.mass * (dq.0.powi(2) + dq.1.powi(2))
     }
 }
 
@@ -36,31 +36,9 @@ impl UniformGravity {
 }
 
 impl Lagrangian for UniformGravity {
-    type Q = f64;
+    type Q = (f64, f64);
 
     fn calc(&self, q: &Self::Q, dq: &Self::Q) -> f64 {
-        0.5 * self.mass * dq.powi(2) - self.mass * self.g * q // y = -q
-    }
-}
-
-// ┌──────────────────────────────────────────────────────────┐
-//  Simple Harmonic Oscillator
-// └──────────────────────────────────────────────────────────┘
-pub struct SHO {
-    mass: f64,
-    k: f64,
-}
-
-impl SHO {
-    pub fn new(mass: f64, k: f64) -> Self {
-        Self { mass, k }
-    }
-}
-
-impl Lagrangian for SHO {
-    type Q = f64;
-
-    fn calc(&self, q: &Self::Q, dq: &Self::Q) -> f64 {
-        0.5 * self.mass * dq.powi(2) - 0.5 * self.k * q.powi(2)
+        0.5 * self.mass * (dq.0.powi(2) + dq.1.powi(2)) - self.mass * self.g * q.1
     }
 }
