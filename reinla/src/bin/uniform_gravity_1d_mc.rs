@@ -15,37 +15,31 @@ const G: f64 = 2.0;
 
 fn main() {
     let mut env = E::new(21, 20, 0, 4, L::new(M, G));
-    let mut agent = QTD0::<S, A, P, E>::new(1.0, 1e-1, 1f64);
+    let mut agent = QEveryVisitMC::<S, A, P, E>::new(1.0);
     let mut policy = P::new(1.0, 0.99);
 
     // Annealing Procedure to find median of lagrangian
     let mut lagrangians = HashSet::new();
     for _ in 0 .. 100 {
-        agent.reset_count();
         let mut state = (0, env.get_init_node());
+        let mut episode = vec![];
         loop {
             let action = agent.select_action(&state, &mut policy, &env);
             let (next_state, reward) = env.transition(&state, &action);
+            episode.push((state, action.unwrap(), reward));
             match next_state {
                 Some(next_state) => {
                     lagrangians.insert((-reward).to_bits());
-                    let step = (
-                        state,
-                        action.unwrap(),
-                        reward,
-                        Some(next_state),
-                        env.available_actions(&next_state),
-                    );
-                    agent.update(&step);
                     state = next_state;
                 }
                 None => {
-                    let step = (state, action.unwrap(), reward, None, Vec::new());
-                    agent.update(&step);
                     break;
                 }
             }
         }
+
+        agent.update(&episode);
+        policy.decay_epsilon();
     }
 
     let lagrangians = lagrangians.into_iter().map(f64::from_bits).collect::<Vec<_>>();
@@ -55,48 +49,37 @@ fn main() {
     env.set_l_min_max(*min, *max);
 
     // Main training
-    let mut agent = QTD0::<S, A, P, E>::new(1.0, 1e-1, 1f64);
+    let mut agent = QEveryVisitMC::<S, A, P, E>::new(1.0);
     let mut policy = P::new(1.0, 0.99);
 
     let mut history = Vec::new();
-    for _ in 0..300 {
-        agent.reset_count();
+    for _ in 0..500 {
         let mut episode = vec![];
         let mut state = (0, env.get_init_node());
 
         loop {
             let action = agent.select_action(&state, &mut policy, &env);
             let (next_state, reward) = env.transition(&state, &action);
+            episode.push((state, action.unwrap(), reward));
             match next_state {
                 Some(next_state) => {
-                    let step = (
-                        state,
-                        action.unwrap(),
-                        reward,
-                        Some(next_state),
-                        env.available_actions(&next_state),
-                    );
-                    agent.update(&step);
-                    episode.push(step);
                     state = next_state;
                 }
                 None => {
-                    let step = (state, action.unwrap(), reward, None, Vec::new());
-                    agent.update(&step);
-                    episode.push(step);
                     break;
                 }
             }
         }
 
+        agent.update(&episode);
         history.push(episode);
         policy.decay_epsilon();
     }
 
     // Test
     policy.eval();
-    agent.reset_count();
     let mut episode = vec![];
+    let mut phys_action = 0f64;
     let mut state = (0, env.get_init_node());
     env.reset_l_min_max();
 
@@ -104,6 +87,7 @@ fn main() {
         let action = agent.select_action(&state, &mut policy, &env);
         let (next_state, r) = env.transition(&state, &action);
         episode.push((state, action.unwrap(), -r));
+        phys_action -= r;
         match next_state {
             Some(next_state) => {
                 state = next_state;
@@ -121,4 +105,5 @@ fn main() {
     println!("{:?}", q_max);
 
     println!("{:?}", episode);
+    println!("{:?}", phys_action);
 }

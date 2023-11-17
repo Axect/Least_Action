@@ -1,4 +1,5 @@
 use crate::lagrangian::Lagrangian;
+use crate::util::elu;
 use forger::env::Env;
 
 type S = (usize, i64);
@@ -37,48 +38,23 @@ impl<L: Lagrangian<Q = f64>> Lattice1D<L> {
         self.end_node
     }
 
-    //pub fn x_min(&self) -> f64 {
-    //    self.init_node as f64
-    //}
+    pub fn set_l_min_max(&mut self, l_min: f64, l_max: f64) {
+        self._l_min_max = Some((l_min, l_max));
+    }
 
-    //pub fn x_max(&self) -> f64 {
-    //    self.end_node as f64
-    //}
-
-    //pub fn v_min(&self) -> f64 {
-    //    1f64
-    //}
-
-    //pub fn v_max(&self) -> f64 {
-    //    (self.end_node - self.init_node) as f64
-    //}
-
-    //pub fn l_min(&self) -> f64 {
-    //    self.lagrangian.calc(&self.x_max(), &self.v_min())
-    //}
-
-    //pub fn l_max(&self) -> f64 {
-    //    self.lagrangian.calc(&self.x_min(), &self.v_max())
-    //}
-
-    //pub fn l_amplify(&self, q: f64, dq: f64) -> f64 {
-    //    let l = self.lagrangian.calc(&q, &dq);
-    //    (l - self.l_min()).powi(2)
-    //}
-
-    pub fn set_l_min_max(&mut self, c_min: f64, c_max: f64) {
-        self._l_min_max = Some((c_min, c_max));
+    pub fn reset_l_min_max(&mut self) {
+        self._l_min_max = None;
     }
 
     pub fn reward(&self, q: f64, dq: f64) -> f64 {
         let l = self.lagrangian.calc(&q, &dq);
         let c = self._l_min_max;
         match c {
-            Some((c_min, c_max)) => {
-                //let c_half = (2f64 * c_min + c_max) / 3f64;
-                //let l_minmax = 6f64 * (l - c_half) / (c_max - c_min);
+            Some((l_min, l_max)) => {
+                //let c_half = (2f64 * l_min + l_max) / 3f64;
+                //let l_minmax = 6f64 * (l - c_half) / (l_max - l_min);
                 //-(elu(l_minmax) + 1f64).powi(4) + 1f64
-                let l_minmax = (l - c_min) / (c_max - c_min);
+                let l_minmax = (l - l_min) / (l_max - l_min);
                 -l_minmax.powi(2)
             }
             None => {
@@ -98,13 +74,24 @@ impl<L: Lagrangian<Q = f64>> Env<S, i64> for Lattice1D<L> {
     }
 
     fn transition(&self, state: &S, action: &Option<i64>) -> (Option<S>, f64) {
+        //if self.is_terminal(state) {
+        //    if self.is_goal(state) {
+        //        return (None, 0.0);
+        //    } else {
+        //        //let delta = (state.1 - self.end_node).abs() as f64 / (self.num_nodes as f64).sqrt();
+        //        //return (None, -(0.1f64 * delta).powi(3));
+        //        return (None, 0.0);
+        //    }
+        //}
+        
         if self.is_terminal(state) {
-            if self.is_goal(state) {
-                return (None, 10.0);
-            } else {
-                return (None, 0.0);
-            }
+            let delta = (state.1 - self.end_node).abs() as f64 / (self.num_nodes as f64).sqrt();
+            return (None, -(delta).powi(2));
+        } else if self.is_goal(state) {
+            let delta_t = (state.0 - self.t) as f64 / (self.t as f64).sqrt();
+            return (None, -(delta_t).powi(2));
         }
+
         let action = action.as_ref().unwrap();
         let q_curr = state.1;
         let q_next = state.1 + action;

@@ -55,10 +55,10 @@ fn main() {
 
     // Main training
     let mut agent = QTD0::<S, A, P, E>::new(1.0, 1e-2, 1f64);
-    let mut policy = P::new(1.0, 0.9);
+    let mut policy = P::new(1.0, 0.99);
 
     let mut history = Vec::new();
-    for _ in 0..100 {
+    for _ in 0..300 {
         agent.reset_count();
         let mut episode = vec![];
         let mut state = (0, 0);
