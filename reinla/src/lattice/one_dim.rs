@@ -61,10 +61,10 @@ impl<L: Lagrangian<Q = f64>> Lattice1D<L> {
         match c {
             Some((l_min, l_max)) => {
                 let l_minmax = (l - l_min) / (l_max - l_min);
-                -l_minmax.powi(2)
+                l_minmax.powi(5)
             }
             None => {
-                -l
+                l
             }
         }
     }

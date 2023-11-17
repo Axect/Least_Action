@@ -6,7 +6,7 @@ use reinla::lattice::one_dim::Lattice1D;
 
 type S = (usize, i64);
 type A = i64;
-type P = EGreedyPolicy<A>;
+type P = EGreedyPolicyMin<A>;
 type L = FreeBody;
 type E = Lattice1D<FreeBody>;
 
@@ -14,7 +14,7 @@ const M: f64 = 1.0;
 
 fn main() {
     let mut env = E::new(6, 0, 5, 4, L::new(M));
-    let mut agent = QTD0::<S, A, P, E>::new(1.0, 1f64, 1f64);
+    let mut agent = QTD0Min::<S, A, P, E>::new(1.0, 1f64, 1f64);
     let mut policy = P::new(1.0, 0.99);
 
     // Annealing Procedure to find median of lagrangian
@@ -27,7 +27,7 @@ fn main() {
             let (next_state, reward) = env.transition(&state, &action);
             match next_state {
                 Some(next_state) => {
-                    lagrangians.insert((-reward).to_bits());
+                    lagrangians.insert(reward.to_bits());
                     let step = (
                         state,
                         action.unwrap(),
@@ -54,11 +54,11 @@ fn main() {
     env.set_l_min_max(*min, *max);
 
     // Main training
-    let mut agent = QTD0::<S, A, P, E>::new(1.0, 1f64, 1f64);
-    let mut policy = P::new(1.0, 0.99);
+    let mut agent = QTD0Min::<S, A, P, E>::new(1.0, 0.1f64, 0.5f64);
+    let mut policy = P::new(1.0, 0.9);
 
     let mut history = Vec::new();
-    for _ in 0..300 {
+    for _ in 0..100 {
         agent.reset_count();
         let mut episode = vec![];
         let mut state = (0, 0);
