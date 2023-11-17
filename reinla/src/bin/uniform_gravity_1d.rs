@@ -14,7 +14,7 @@ const M: f64 = 1.0;
 const G: f64 = 2.0;
 
 fn main() {
-    let mut env = E::new(21, 20, 0, 4, L::new(M, G));
+    let mut env = E::new(21, 20, 0, 3, L::new(M, G));
     let mut agent = QTD0::<S, A, P, E>::new(1.0, 1e-1, 1f64);
     let mut policy = P::new(1.0, 0.99);
 
@@ -26,9 +26,9 @@ fn main() {
         loop {
             let action = agent.select_action(&state, &mut policy, &env);
             let (next_state, reward) = env.transition(&state, &action);
+            lagrangians.insert((-reward).to_bits());
             match next_state {
                 Some(next_state) => {
-                    lagrangians.insert((-reward).to_bits());
                     let step = (
                         state,
                         action.unwrap(),
@@ -103,12 +103,13 @@ fn main() {
     loop {
         let action = agent.select_action(&state, &mut policy, &env);
         let (next_state, r) = env.transition(&state, &action);
-        episode.push((state, action.unwrap(), -r));
+        episode.push((state, action.unwrap() - state.1, -r));
         match next_state {
             Some(next_state) => {
                 state = next_state;
             }
             None => {
+                episode.push(((state.0 + 1, env.get_end_node()), action.unwrap() - state.1, 0f64));
                 break;
             }
         }

@@ -13,7 +13,7 @@ type E = Lattice1D<FreeBody>;
 const M: f64 = 1.0;
 
 fn main() {
-    let mut env = E::new(6, 0, 5, 5, L::new(M));
+    let mut env = E::new(6, 0, 5, 4, L::new(M));
     let mut agent = QTD0::<S, A, P, E>::new(1.0, 1f64, 1f64);
     let mut policy = P::new(1.0, 0.99);
 
@@ -54,7 +54,7 @@ fn main() {
     env.set_l_min_max(*min, *max);
 
     // Main training
-    let mut agent = QTD0::<S, A, P, E>::new(1.0, 1e-2, 1f64);
+    let mut agent = QTD0::<S, A, P, E>::new(1.0, 1f64, 1f64);
     let mut policy = P::new(1.0, 0.99);
 
     let mut history = Vec::new();

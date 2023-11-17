@@ -14,7 +14,7 @@ const M: f64 = 1.0;
 const G: f64 = 2.0;
 
 fn main() {
-    let mut env = E::new(21, 20, 0, 4, L::new(M, G));
+    let mut env = E::new(21, 0, 20, 3, L::new(M, G));
     let mut agent = QEveryVisitMC::<S, A, P, E>::new(1.0);
     let mut policy = P::new(1.0, 0.99);
 
@@ -26,10 +26,10 @@ fn main() {
         loop {
             let action = agent.select_action(&state, &mut policy, &env);
             let (next_state, reward) = env.transition(&state, &action);
+            lagrangians.insert((-reward).to_bits());
             episode.push((state, action.unwrap(), reward));
             match next_state {
                 Some(next_state) => {
-                    lagrangians.insert((-reward).to_bits());
                     state = next_state;
                 }
                 None => {
@@ -50,10 +50,10 @@ fn main() {
 
     // Main training
     let mut agent = QEveryVisitMC::<S, A, P, E>::new(1.0);
-    let mut policy = P::new(1.0, 0.99);
+    let mut policy = P::new(1.0, 0.9);
 
     let mut history = Vec::new();
-    for _ in 0..500 {
+    for _ in 0..100 {
         let mut episode = vec![];
         let mut state = (0, env.get_init_node());
 

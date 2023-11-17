@@ -1,5 +1,5 @@
 use crate::lagrangian::Lagrangian;
-use crate::util::elu;
+use crate::util::comb;
 use forger::env::Env;
 
 type S = (usize, i64);
@@ -26,8 +26,9 @@ impl<L: Lagrangian<Q = f64>> Lattice1D<L> {
         }
     }
 
-    pub fn lagrangian(&self) -> &L {
-        &self.lagrangian
+    #[allow(non_snake_case)]
+    pub fn L(&self, q: f64, dq: f64) -> f64 {
+        self.lagrangian.calc(&q, &dq)
     }
 
     pub fn get_init_node(&self) -> i64 {
@@ -36,6 +37,14 @@ impl<L: Lagrangian<Q = f64>> Lattice1D<L> {
 
     pub fn get_end_node(&self) -> i64 {
         self.end_node
+    }
+
+    pub fn get_t(&self) -> usize {
+        self.t
+    }
+
+    pub fn get_num_nodes(&self) -> usize {
+        self.num_nodes
     }
 
     pub fn set_l_min_max(&mut self, l_min: f64, l_max: f64) {
@@ -47,13 +56,10 @@ impl<L: Lagrangian<Q = f64>> Lattice1D<L> {
     }
 
     pub fn reward(&self, q: f64, dq: f64) -> f64 {
-        let l = self.lagrangian.calc(&q, &dq);
+        let l = self.L(q, dq);
         let c = self._l_min_max;
         match c {
             Some((l_min, l_max)) => {
-                //let c_half = (2f64 * l_min + l_max) / 3f64;
-                //let l_minmax = 6f64 * (l - c_half) / (l_max - l_min);
-                //-(elu(l_minmax) + 1f64).powi(4) + 1f64
                 let l_minmax = (l - l_min) / (l_max - l_min);
                 -l_minmax.powi(2)
             }
@@ -61,6 +67,41 @@ impl<L: Lagrangian<Q = f64>> Lattice1D<L> {
                 -l
             }
         }
+    }
+
+    pub fn brute_force(&self) -> Vec<i64> {
+        let mut min_val = std::f64::MAX;
+        let mut min_path = vec![0i64; self.t+1];
+
+        min_path[0] = self.init_node;
+        min_path[self.t] = self.end_node;
+
+        for q_vec in comb(self.num_nodes as i64 - 2, self.t - 1).into_iter() {
+            let mut action = 0f64;
+
+            let v0 = (q_vec[0] - self.init_node) as f64;
+            let x0 = (q_vec[0] + self.init_node) as f64 / 2f64;
+            action += self.L(x0, v0);
+
+            for i in (1 .. self.t - 1).rev() {
+                let vi = (q_vec[i] - q_vec[i-1]) as f64;
+                let xi = (q_vec[i] + q_vec[i-1]) as f64 / 2f64;
+                action += self.L(xi, vi);
+            }
+            let qm = q_vec[self.t-2];
+            let vm = (self.end_node - qm) as f64;
+            let xm = (self.end_node + qm) as f64 / 2f64;
+            action += self.L(xm, vm);
+
+            if action < min_val {
+                for j in 1 .. self.t {
+                    min_path[j] = q_vec[j-1];
+                }
+                min_val = action;
+            }
+        }
+
+        min_path
     }
 }
 
@@ -74,27 +115,18 @@ impl<L: Lagrangian<Q = f64>> Env<S, i64> for Lattice1D<L> {
     }
 
     fn transition(&self, state: &S, action: &Option<i64>) -> (Option<S>, f64) {
-        //if self.is_terminal(state) {
-        //    if self.is_goal(state) {
-        //        return (None, 0.0);
-        //    } else {
-        //        //let delta = (state.1 - self.end_node).abs() as f64 / (self.num_nodes as f64).sqrt();
-        //        //return (None, -(0.1f64 * delta).powi(3));
-        //        return (None, 0.0);
-        //    }
-        //}
-        
         if self.is_terminal(state) {
-            let delta = (state.1 - self.end_node).abs() as f64 / (self.num_nodes as f64).sqrt();
-            return (None, -(delta).powi(2));
-        } else if self.is_goal(state) {
-            let delta_t = (state.0 - self.t) as f64 / (self.t as f64).sqrt();
-            return (None, -(delta_t).powi(2));
+            let q = (state.1 + self.end_node) as f64 / 2f64;
+            let dq = (self.end_node - state.1) as f64;
+            
+            let reward = self.reward(q, dq);
+
+            return (None, reward);
         }
 
         let action = action.as_ref().unwrap();
         let q_curr = state.1;
-        let q_next = state.1 + action;
+        let q_next = *action;
 
         let q = (q_curr + q_next) as f64 / 2f64;
         let dq = (q_next - q_curr) as f64;
@@ -108,8 +140,10 @@ impl<L: Lagrangian<Q = f64>> Env<S, i64> for Lattice1D<L> {
     }
 
     fn available_actions(&self, state: &S) -> Vec<i64> {
-        let part_1 = (0 - state.1 .. 0).collect::<Vec<i64>>();
-        let part_2 = (1 .. self.num_nodes as i64 - state.1).collect::<Vec<i64>>();
-        part_1.into_iter().chain(part_2).collect()
+        if self.is_terminal(state) {
+            return vec![self.end_node];
+        }
+        // Monotonic increasing
+        (state.1 .. self.end_node).collect()
     }
 }
