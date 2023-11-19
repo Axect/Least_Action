@@ -13,14 +13,19 @@ pub struct Lattice2D<L: Lagrangian> {
 }
 
 impl<L: Lagrangian<Q = Q>> Lattice2D<L> {
-    pub fn new(init_node: (i64, i64), end_node: (i64, i64), t: usize, lagrangian: L, ground_state:
-    (f64, f64)) -> Self {
+    pub fn new(
+        init_node: (i64, i64),
+        end_node: (i64, i64),
+        t: usize,
+        lagrangian: L,
+        ground_state: (f64, f64),
+    ) -> Self {
         Self {
             init_node,
             end_node,
             t,
             lagrangian,
-            ground_state
+            ground_state,
         }
     }
 

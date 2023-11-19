@@ -1,6 +1,6 @@
-use reinla::lattice::one_dim::Lattice1D;
-use reinla::lagrangian::one_dim::UniformGravity;
 use forger::prelude::*;
+use reinla::lagrangian::one_dim::UniformGravity;
+use reinla::lattice::one_dim::Lattice1D;
 
 type S = (usize, i64);
 type A = i64;

@@ -21,20 +21,20 @@ pub fn huber(x: f64, delta: f64) -> f64 {
 }
 
 pub fn comb(n: i64, k: usize) -> Vec<Vec<i64>> {
-    let mut p = (1i64 .. (k+1) as i64).collect::<Vec<i64>>();
+    let mut p = (1i64..(k + 1) as i64).collect::<Vec<i64>>();
     let mut result: Vec<Vec<i64>> = Vec::new();
 
     loop {
         result.push(p.clone());
         let mut i = k;
 
-        while i > 0 && p[i-1] == (n as usize+i-k) as i64 {
+        while i > 0 && p[i - 1] == (n as usize + i - k) as i64 {
             i -= 1;
         }
         if i > 0 {
-            p[i-1] += 1;
-            for j in i .. k {
-                p[j] = p[j-1] + 1;
+            p[i - 1] += 1;
+            for j in i..k {
+                p[j] = p[j - 1] + 1;
             }
         } else {
             break;

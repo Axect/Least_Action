@@ -1,7 +1,7 @@
 use crate::lagrangian::Lagrangian;
-use std::hash::{Hash, Hasher};
-use forger::env::Env;
 use crate::util::elu;
+use forger::env::Env;
+use std::hash::{Hash, Hasher};
 
 pub type S<const T: usize> = State1D<T>;
 pub type A = Move1D;
@@ -45,7 +45,12 @@ pub struct TimeLattice1D<L: Lagrangian, const T: usize> {
 
 impl<L: Lagrangian<Q = f64>, const T: usize> TimeLattice1D<L, T> {
     pub fn new(num_nodes: usize, lagrangian: L) -> Self {
-        Self { num_nodes, t_vec: [0; T], lagrangian, s_min_max: None}
+        Self {
+            num_nodes,
+            t_vec: [0; T],
+            lagrangian,
+            s_min_max: None,
+        }
     }
 
     pub fn num_nodes(&self) -> usize {
@@ -64,9 +69,7 @@ impl<L: Lagrangian<Q = f64>, const T: usize> TimeLattice1D<L, T> {
     pub fn set_s_min_max(&mut self, s_min: f64, s_max: f64) {
         self.s_min_max = Some((s_min, s_max));
     }
-
 }
-
 
 impl<L: Lagrangian<Q = f64>, const T: usize> Env<S<T>, A> for TimeLattice1D<L, T> {
     fn is_terminal(&self, _state: &S<T>) -> bool {
@@ -83,31 +86,34 @@ impl<L: Lagrangian<Q = f64>, const T: usize> Env<S<T>, A> for TimeLattice1D<L, T
         // Obtain next action via sum of lagrangians
         let mut state_vec = state.state.to_vec();
         state_vec.insert(0, 0);
-        state_vec.insert(T+1, self.num_nodes());
+        state_vec.insert(T + 1, self.num_nodes());
         match action {
             Move1D::Up(s) => {
-                state_vec[s+1] += 1;
+                state_vec[s + 1] += 1;
             }
             Move1D::Down(s) => {
-                state_vec[s+1] -= 1;
+                state_vec[s + 1] -= 1;
             }
             Move1D::Hold => {}
         }
-        let s = state_vec[0 .. T+1].iter().zip(state_vec[1 .. T+2].iter()).fold(0f64, |acc, (q_c, q_n)| {
-            let q = (*q_c as f64 + *q_n as f64) / 2.0;
-            let dq = *q_n as f64 - *q_c as f64;
-            acc + self.L(q, dq)
-        });
+        let s = state_vec[0..T + 1]
+            .iter()
+            .zip(state_vec[1..T + 2].iter())
+            .fold(0f64, |acc, (q_c, q_n)| {
+                let q = (*q_c as f64 + *q_n as f64) / 2.0;
+                let dq = *q_n as f64 - *q_c as f64;
+                acc + self.L(q, dq)
+            });
 
         let mut state_new = [0usize; T];
-        state_new.copy_from_slice(&state_vec[1 .. T+1]);
+        state_new.copy_from_slice(&state_vec[1..T + 1]);
 
         let reward = match self.s_min_max {
             Some((s_min, s_max)) => {
                 let s = (s - s_min) / (s_max - s_min);
                 //-s.exp()
                 //-(s - s_min).powi(2)
-                -s.powi(2)
+                -s.powi((T as i32 + 2).max(5))
             }
             None => -s,
         };
@@ -126,4 +132,3 @@ impl<L: Lagrangian<Q = f64>, const T: usize> Env<S<T>, A> for TimeLattice1D<L, T
         actions
     }
 }
-

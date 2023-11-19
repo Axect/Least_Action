@@ -20,7 +20,7 @@ fn main() {
 
     // Annealing Procedure to find median of lagrangian
     let mut lagrangians = HashSet::new();
-    for _ in 0 .. 100 {
+    for _ in 0..100 {
         let mut state = (0, env.get_init_node());
         let mut episode = vec![];
         loop {
@@ -42,9 +42,18 @@ fn main() {
         policy.decay_epsilon();
     }
 
-    let lagrangians = lagrangians.into_iter().map(f64::from_bits).collect::<Vec<_>>();
-    let min = lagrangians.iter().min_by(|a, b| a.partial_cmp(b).unwrap()).unwrap();
-    let max = lagrangians.iter().max_by(|a, b| a.partial_cmp(b).unwrap()).unwrap();
+    let lagrangians = lagrangians
+        .into_iter()
+        .map(f64::from_bits)
+        .collect::<Vec<_>>();
+    let min = lagrangians
+        .iter()
+        .min_by(|a, b| a.partial_cmp(b).unwrap())
+        .unwrap();
+    let max = lagrangians
+        .iter()
+        .max_by(|a, b| a.partial_cmp(b).unwrap())
+        .unwrap();
     println!("min: {}, max: {}", min, max);
     env.set_l_min_max(*min, *max);
 
@@ -98,8 +107,18 @@ fn main() {
         }
     }
 
-    let q_min = agent.q_table.iter().map(|x| x.1).min_by(|x, y| x.partial_cmp(y).unwrap()).unwrap();
-    let q_max = agent.q_table.iter().map(|x| x.1).max_by(|x, y| x.partial_cmp(y).unwrap()).unwrap();
+    let q_min = agent
+        .q_table
+        .iter()
+        .map(|x| x.1)
+        .min_by(|x, y| x.partial_cmp(y).unwrap())
+        .unwrap();
+    let q_max = agent
+        .q_table
+        .iter()
+        .map(|x| x.1)
+        .max_by(|x, y| x.partial_cmp(y).unwrap())
+        .unwrap();
 
     println!("{:?}", q_min);
     println!("{:?}", q_max);

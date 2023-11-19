@@ -15,14 +15,20 @@ pub struct Lattice1D<L: Lagrangian> {
 }
 
 impl<L: Lagrangian<Q = f64>> Lattice1D<L> {
-    pub fn new(num_nodes: usize, init_node: i64, end_node: i64, t: usize, lagrangian: L) -> Lattice1D<L> {
+    pub fn new(
+        num_nodes: usize,
+        init_node: i64,
+        end_node: i64,
+        t: usize,
+        lagrangian: L,
+    ) -> Lattice1D<L> {
         Lattice1D {
             num_nodes,
             init_node,
             end_node,
             t,
             lagrangian,
-            _l_min_max: None
+            _l_min_max: None,
         }
     }
 
@@ -63,15 +69,13 @@ impl<L: Lagrangian<Q = f64>> Lattice1D<L> {
                 let l_minmax = (l - l_min) / (l_max - l_min);
                 l_minmax.powi(5)
             }
-            None => {
-                l
-            }
+            None => l,
         }
     }
 
     pub fn brute_force(&self) -> Vec<i64> {
         let mut min_val = std::f64::MAX;
-        let mut min_path = vec![0i64; self.t+1];
+        let mut min_path = vec![0i64; self.t + 1];
 
         min_path[0] = self.init_node;
         min_path[self.t] = self.end_node;
@@ -83,19 +87,19 @@ impl<L: Lagrangian<Q = f64>> Lattice1D<L> {
             let x0 = (q_vec[0] + self.init_node) as f64 / 2f64;
             action += self.L(x0, v0);
 
-            for i in (1 .. self.t - 1).rev() {
-                let vi = (q_vec[i] - q_vec[i-1]) as f64;
-                let xi = (q_vec[i] + q_vec[i-1]) as f64 / 2f64;
+            for i in (1..self.t - 1).rev() {
+                let vi = (q_vec[i] - q_vec[i - 1]) as f64;
+                let xi = (q_vec[i] + q_vec[i - 1]) as f64 / 2f64;
                 action += self.L(xi, vi);
             }
-            let qm = q_vec[self.t-2];
+            let qm = q_vec[self.t - 2];
             let vm = (self.end_node - qm) as f64;
             let xm = (self.end_node + qm) as f64 / 2f64;
             action += self.L(xm, vm);
 
             if action < min_val {
-                for j in 1 .. self.t {
-                    min_path[j] = q_vec[j-1];
+                for j in 1..self.t {
+                    min_path[j] = q_vec[j - 1];
                 }
                 min_val = action;
             }
@@ -118,7 +122,7 @@ impl<L: Lagrangian<Q = f64>> Env<S, i64> for Lattice1D<L> {
         if self.is_terminal(state) {
             let q = (state.1 + self.end_node) as f64 / 2f64;
             let dq = (self.end_node - state.1) as f64;
-            
+
             let reward = self.reward(q, dq);
 
             return (None, reward);
@@ -133,10 +137,7 @@ impl<L: Lagrangian<Q = f64>> Env<S, i64> for Lattice1D<L> {
 
         let reward = self.reward(q, dq);
 
-        (
-            Some((state.0 + 1, q_next)),
-            reward,
-        )
+        (Some((state.0 + 1, q_next)), reward)
     }
 
     fn available_actions(&self, state: &S) -> Vec<i64> {
@@ -144,6 +145,6 @@ impl<L: Lagrangian<Q = f64>> Env<S, i64> for Lattice1D<L> {
             return vec![self.end_node];
         }
         // Monotonic increasing
-        (state.1 .. self.end_node).collect()
+        (state.1..self.end_node).collect()
     }
 }
