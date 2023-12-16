@@ -1,9 +1,10 @@
 use crate::lagrangian::Lagrangian;
-use forger::env::Env;
+//use forger::env::Env;
 
-type S = (usize, (i64, i64));
+//type S = (usize, (i64, i64));
 type Q = (f64, f64);
 
+#[allow(dead_code)]
 pub struct Lattice2D<L: Lagrangian> {
     init_node: (i64, i64),
     end_node: (i64, i64),
