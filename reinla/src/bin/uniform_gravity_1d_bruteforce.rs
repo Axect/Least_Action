@@ -6,7 +6,7 @@ type E = Lattice1D<L>;
 type L = UniformGravity;
 
 const M: f64 = 1.0;
-const G: f64 = 2.0;
+const G: f64 = 10.0;
 
 #[allow(non_snake_case)]
 pub fn main() {
