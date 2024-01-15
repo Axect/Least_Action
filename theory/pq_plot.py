@@ -11,6 +11,7 @@ y_harmonic = df['harmonic']
 y_pade = df['pade']
 y_taylor = df['taylor']
 y_one = df['one']
+y_three = df['three']
 
 
 # Plot params
@@ -27,8 +28,9 @@ with plt.style.context(["science", "nature"]):
     ax.autoscale(tight=True)
     ax.set(**pparam)
     ax.plot(x, y_harmonic, 'k', label=r'$q_\text{true}(T/2)$', alpha=0.3)
-    ax.plot(x, y_pade, '--', label=r'$q_\text{pade}(T/2)$', alpha=0.7)
-    ax.plot(x, y_taylor, '-.', label=r'$q_\text{taylor}(T/2)$', alpha=0.7)
-    ax.plot(x, y_one, ':', label=r'$q_1$', alpha=0.7)
+    ax.plot(x, y_pade, '--', label=r'$q_\text{Padé}(T/2)$', alpha=0.7)
+    ax.plot(x, y_taylor, '-.', label=r'$q_\text{Taylor}(T/2)$', alpha=0.7)
+    ax.plot(x, y_one, ':', label=r'$q_1(N=1)$', alpha=0.7)
+    ax.plot(x, y_three, '-.', label=r'$q_2(N=3)$', alpha=0.7)
     ax.legend()
     fig.savefig('plot.png', dpi=600, bbox_inches='tight')

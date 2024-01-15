@@ -20,7 +20,7 @@ fn main() {
     df.push("pade", Series::new(y_pade));
     df.push("taylor", Series::new(y_taylor));
     df.push("one", Series::new(y_one));
-    df.push("pade2", Series::new(y_pade2));
+    
     df.push("three", Series::new(y_three));
 
     df.print();
@@ -50,6 +50,6 @@ fn one_node(x: f64) -> f64 {
 }
 
 fn three_node(x: f64) -> f64 {
-    (1f64 + x.powi(2) / 16f64 + x.powi(4) / 1024f64)
-        / (1f64 - 3f64 * x.powi(2) / 16f64 + x.powi(4) / 1024f64)
+    (1f64 + x.powi(2) / 32f64 + x.powi(4) / 4096f64)
+        / (1f64 - 3f64 * x.powi(2) / 32f64 + x.powi(4) / 4096f64)
 }
