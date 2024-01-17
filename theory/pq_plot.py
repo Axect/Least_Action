@@ -55,7 +55,7 @@ with plt.style.context(["science", "nature"]):
     fig, ax = plt.subplots()
     ax.autoscale(tight=True)
     ax.set(**pparam)
-    ax.plot(k, y_hat, 'b.-', label=r'$q_k$')
+    ax.plot(k, y_hat, 'k.-', label=r'$q_k$')
     ax.plot(k, y_true, 'r--', label=r'$q_\text{true}(T/2)$')
     ax.legend()
     fig.savefig('plot2.png', dpi=600, bbox_inches='tight')
@@ -74,3 +74,29 @@ with plt.style.context(["science", "nature"]):
     ax.axhline(y=0, color='r', linestyle='--', label=r'$\omega T = \dfrac{\pi}{2}$')
     ax.legend()
     fig.savefig('plot3.png', dpi=600, bbox_inches='tight')
+
+# Plot 3
+dh = pd.read_parquet('data3.parquet')
+
+t = dh['t']
+y_true = dh['y_true']
+t_hats = [np.linspace(0, np.pi/2, 2**i + 1) for i in range(1, 5)]
+y_hats = []
+for i in range(1, 5):
+    y_hats.append(dh[f'y_{i}'][:len(t_hats[i-1])])
+styles = ['-', '--', '-.', ':']
+
+pparam = dict(
+    xlabel = r'$t$',
+    ylabel = r'$q$',
+)
+
+with plt.style.context(["science", "nature"]):
+    fig, ax = plt.subplots()
+    ax.autoscale(tight=True)
+    ax.set(**pparam)
+    ax.plot(t, y_true, 'k', label=r'$q_\text{true}~(\omega=1, T=\frac{\pi}{2})$', alpha=0.3)
+    for i in range(1, 5):
+        ax.plot(t_hats[i-1], y_hats[i-1], styles[i-1], label=rf'$\hat{{q}} ~(N=2^{i} - 1)$', alpha=0.5)
+    ax.legend()
+    fig.savefig('plot4.png', dpi=600, bbox_inches='tight')
