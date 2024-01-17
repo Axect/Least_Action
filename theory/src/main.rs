@@ -1,3 +1,5 @@
+use std::f64::consts::PI;
+
 use peroxide::fuga::*;
 
 #[allow(non_snake_case)]
@@ -11,7 +13,6 @@ fn main() {
     let y_pade = x.fmap(pade);
     let y_taylor = x.fmap(taylor);
     let y_one = x.fmap(one_node);
-    let y_pade2 = x.fmap(pade2);
     let y_three = x.fmap(three_node);
 
     let mut df = DataFrame::new(vec![]);
@@ -26,6 +27,20 @@ fn main() {
     df.print();
     df.write_parquet("data.parquet", CompressionOptions::Uncompressed)
         .unwrap();
+
+    let omega_t = PI / 2f64;
+
+    let k = seq(1, 10, 1);
+    let y_hat = k.fmap(|x| one_least_harmonic(x, omega_t));
+    let y_true = k.fmap(|_| 1f64 / (omega_t / 2f64).cos()); 
+    let mut dg = DataFrame::new(vec![]);
+    dg.push("k", Series::new(k));
+    dg.push("y_hat", Series::new(y_hat));
+    dg.push("y_true", Series::new(y_true));
+    dg.print();
+    dg.write_parquet("data2.parquet", CompressionOptions::Uncompressed)
+        .unwrap();
+
 }
 
 fn harmonic_half(x: f64) -> f64 {
@@ -34,11 +49,6 @@ fn harmonic_half(x: f64) -> f64 {
 
 fn pade(x: f64) -> f64 {
     (1f64 + 1f64 / 48f64 * x.powi(2)) / (1f64 - 5f64 / 48f64 * x.powi(2))
-}
-
-fn pade2(x: f64) -> f64 {
-    (1f64 + 11f64 / 1008f64 * x.powi(2) + 13f64 * x.powi(4) / 241920f64)
-        / (1f64 + 115f64 * x.powi(2) / 1008f64 + 313f64 * x.powi(4) / 241920f64)
 }
 
 fn taylor(x: f64) -> f64 {
@@ -52,4 +62,32 @@ fn one_node(x: f64) -> f64 {
 fn three_node(x: f64) -> f64 {
     (1f64 + x.powi(2) / 32f64 + x.powi(4) / 4096f64)
         / (1f64 - 3f64 * x.powi(2) / 32f64 + x.powi(4) / 4096f64)
+}
+
+#[allow(non_snake_case)]
+fn least_harmonic(N: usize, omega: f64, T: f64, A: f64, B: f64) -> Vec<f64> {
+    let f = omega.powi(2) * T.powi(2) / (4f64 * (N+1).pow(2) as f64);
+    let g = (1f64 - f) / (1f64 + f);
+    let theta = g.acos();
+    let a = (0 ..=N).map(|n| ((n + 1) as f64 * theta).sin()).collect::<Vec<_>>();
+    let B_N = B / a[N];
+
+    let mut S = 0f64;
+    let mut q = vec![0f64; N];
+
+    for n in (0 .. N).rev() {
+        S += 1f64 / (a[n] * a[n-1]);
+        q[n] = a[n-1] * (B_N + A * S);
+    }
+
+    q
+}
+
+#[allow(non_snake_case)]
+fn one_least_harmonic(k: f64, x: f64) -> f64 {
+    let a = x / 4f64;
+    let f = a.powi(2) / k.powi(2);
+    let g = (1f64 - f) / (1f64 + f);
+    let theta = g.acos();
+    1f64 / (k * theta).cos()
 }
