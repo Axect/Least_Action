@@ -56,7 +56,7 @@ with plt.style.context(["science", "nature"]):
     ax.autoscale(tight=True)
     ax.set(**pparam)
     ax.plot(k, y_hat, 'k.-', label=r'$q_k$')
-    ax.plot(k, y_true, 'r--', label=r'$q_\text{true}(T/2)$')
+    ax.plot(k, y_true, 'r--', label=r'$q_\text{true}(T/2) (\omega T = \dfrac{\pi}{2})$')
     ax.legend()
     fig.savefig('plot2.png', dpi=600, bbox_inches='tight')
 
@@ -70,8 +70,8 @@ with plt.style.context(["science", "nature"]):
     fig, ax = plt.subplots()
     ax.autoscale(tight=True)
     ax.set(**pparam)
-    ax.plot(k, y_diff * 100, 'k.-')
-    ax.axhline(y=0, color='r', linestyle='--', label=r'$\omega T = \dfrac{\pi}{2}$')
+    ax.plot(k, y_diff * 100, 'k.-', label=r'$\frac{|q_k - q_\text{true}(T/2)|}{q_\text{true}(T/2)} \times 100$')
+    ax.axhline(y=0, color='r', linestyle='--', label=r'$0$')
     ax.legend()
     fig.savefig('plot3.png', dpi=600, bbox_inches='tight')
 
