@@ -43,8 +43,8 @@ fn main() {
     let A = 0f64;
     let B = 20f64;
     let omega = 1f64;
-    let T = PI / 2f64;
-    let t = linspace(0, PI / 2f64, 2usize.pow(10) + 1);
+    let T = 2f64 * PI / 3f64;
+    let t = linspace(0, T, 2usize.pow(10) + 1);
     let mut y_true = true_harmonic(t.len()-2, omega, T, A, B);
     y_true.push(B);
     y_true.insert(0, A);
